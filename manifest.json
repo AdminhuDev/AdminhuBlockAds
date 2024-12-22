@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Bloqueador de Anúncios do YouTube",
   "version": "1.0",
+  "author": "AdminhuDev",
   "description": "Bloqueia anúncios no YouTube e oferece controle de volume avançado",
   "permissions": [
     "webRequest",
@@ -30,6 +31,7 @@
     }
   ],
   "action": {
-    "default_title": "Bloqueador de Anúncios do YouTube"
+    "default_title": "Bloqueador de Anúncios do YouTube by AdminhuDev"
+
   }
 }
