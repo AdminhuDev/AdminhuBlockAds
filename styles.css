@@ -1,0 +1,339 @@
+/* Animações */
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 0.5; }
+}
+
+/* Animação de reset do volume */
+@keyframes resetPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+/* Classe de feedback visual para reset */
+.reset-pulse {
+    animation: resetPulse 0.3s ease-out;
+}
+
+/* Elemento do header do YouTube */
+.yt-header-element {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    margin: 0;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    font-family: "YouTube Sans", Roboto, sans-serif;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.9);
+    cursor: default;
+    animation: fadeIn 0.3s ease-out;
+    height: 28px;
+    box-sizing: border-box;
+    border: none;
+}
+
+/* Ponto de status */
+.status-dot {
+    width: 6px;
+    height: 6px;
+    background: rgba(52, 211, 153, 0.8);
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+    animation: pulse 2s infinite;
+    flex-shrink: 0;
+}
+
+/* Tema escuro (padrão do YouTube) */
+[dark] .yt-header-element {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Tema claro */
+[light] .yt-header-element {
+    background: rgba(0, 0, 0, 0.05);
+    color: rgba(0, 0, 0, 0.8);
+}
+
+[light] .status-dot {
+    background: rgba(0, 165, 81, 0.8);
+    box-shadow: 0 0 12px rgba(0, 165, 81, 0.4);
+}
+
+/* Estilo base para elementos flutuantes */
+.floating-element {
+    position: fixed;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: rgba(255, 255, 255, 0.9);
+    z-index: 9999;
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.1), 
+        0 2px 4px rgba(0, 0, 0, 0.06),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    animation: fadeIn 0.5s ease-out;
+    transition: all 0.3s ease;
+}
+
+/* Indicador de status */
+#ad-blocker-status {
+    bottom: 24px;
+    right: 24px;
+    padding: 12px 18px;
+    background: rgba(52, 211, 153, 0.08);
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#ad-blocker-status::before {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    background: rgba(52, 211, 153, 0.8);
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+}
+
+/* Contador de anúncios */
+#ad-counter {
+    position: relative;
+    cursor: default;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#ad-counter::after {
+    content: 'Anúncios Bloqueados';
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.7);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 4px 8px;
+    border-radius: 4px;
+    backdrop-filter: blur(8px);
+}
+
+#ad-counter:hover::after {
+    opacity: 1;
+}
+
+/* Indicador de volume */
+.volume-indicator {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.4);
+    color: rgba(255, 255, 255, 0.95);
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-family: 'YouTube Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.2s ease;
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+    letter-spacing: 0.3px;
+    transform-origin: center top;
+    transform: translateY(0);
+    text-align: center;
+    min-width: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.volume-indicator.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Tema escuro */
+@media (prefers-color-scheme: dark) {
+    #ad-blocker-status {
+        background: rgba(52, 211, 153, 0.08);
+    }
+    
+    #ad-counter {
+        background: rgba(59, 130, 246, 0.08);
+    }
+    
+    .volume-indicator {
+        background: rgba(28, 28, 28, 0.4);
+        box-shadow: 
+            0 4px 12px rgba(0, 0, 0, 0.2),
+            0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+} 
+
+/* Variáveis de cores */
+:root {
+    --volume-normal: #34D399;
+    --volume-high: #FBBF24;
+    --volume-danger: #EF4444;
+    --volume-bg: rgba(255, 255, 255, 0.1);
+    --volume-shadow-normal: rgba(52, 211, 153, 0.3);
+    --volume-shadow-high: rgba(251, 191, 36, 0.3);
+    --volume-shadow-danger: rgba(239, 68, 68, 0.3);
+}
+
+/* Tema escuro */
+[dark] {
+    --volume-normal: #34D399;
+    --volume-high: #FBBF24;
+    --volume-danger: #EF4444;
+    --volume-bg: rgba(255, 255, 255, 0.1);
+}
+
+/* Tema claro */
+[light] {
+    --volume-normal: #00A551;
+    --volume-high: #D97706;
+    --volume-danger: #DC2626;
+    --volume-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* Container de controles do header */
+.yt-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 6px;
+    height: 40px;
+}
+
+/* Controle de volume circular */
+.volume-control {
+    cursor: pointer;
+    padding: 2px !important;
+    position: relative;
+    border: none !important;
+    background: transparent !important;
+}
+
+.volume-control::after {
+    content: 'Clique para 100%\A Role para ajustar';
+    white-space: pre;
+    position: absolute;
+    bottom: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 4px 8px;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.volume-control:hover::after {
+    opacity: 1;
+}
+
+.volume-knob {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--volume-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+}
+
+.volume-knob:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.3);
+}
+
+.volume-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(var(--volume-color) 180deg, var(--volume-bg) 0deg);
+    opacity: 0.8;
+    transition: opacity 0.2s ease, background 0.2s ease;
+    border: none;
+}
+
+.volume-knob:hover .volume-progress {
+    opacity: 1;
+}
+
+.volume-value {
+    position: relative;
+    z-index: 1;
+    font-size: 10px;
+    font-weight: 500;
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+} 
+
+/* Cores do volume baseadas no nível */
+.volume-knob[data-volume-level="normal"] .volume-progress {
+    background: conic-gradient(var(--volume-normal) var(--volume-angle), var(--volume-bg) 0deg);
+    transform: rotate(-90deg);
+}
+
+.volume-knob[data-volume-level="high"] .volume-progress {
+    background: conic-gradient(var(--volume-high) var(--volume-angle), var(--volume-bg) 0deg);
+    transform: rotate(-90deg);
+}
+
+.volume-knob[data-volume-level="danger"] .volume-progress {
+    background: conic-gradient(var(--volume-danger) var(--volume-angle), var(--volume-bg) 0deg);
+    transform: rotate(-90deg);
+}
+
+.volume-knob[data-volume-level="normal"]:hover {
+    box-shadow: 0 0 10px var(--volume-shadow-normal);
+}
+
+.volume-knob[data-volume-level="high"]:hover {
+    box-shadow: 0 0 10px var(--volume-shadow-high);
+}
+
+.volume-knob[data-volume-level="danger"]:hover {
+    box-shadow: 0 0 10px var(--volume-shadow-danger);
+}
+  
