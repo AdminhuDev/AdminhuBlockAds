@@ -1,144 +1,124 @@
-// Lista de padrões de URLs de anúncios do YouTube
-const adPatterns = [
-    // Padrões básicos de domínios de anúncios
-    "*://*.doubleclick.net/*",
-    "*://googleads.g.doubleclick.net/*",
-    "*://*.googlesyndication.com/*",
-    "*://*.google-analytics.com/*",
-    "*://*.googletagservices.com/*",
-    "*://*.googleadservices.com/*",
-    "*://*.googletagmanager.com/*",
-    
-    // Padrões específicos do YouTube
-    "*://www.youtube.com/pagead/*",
-    "*://www.youtube.com/ads/*",
-    "*://www.youtube.com/get_midroll_info*",
-    "*://www.youtube.com/ptracking*",
-    "*://www.youtube.com/api/stats/ads*",
-    "*://www.youtube.com/pagead/adview*",
-    "*://www.youtube.com/pagead/conversion*",
-    "*://www.youtube.com/pagead/interaction*",
-    "*://www.youtube.com/_get_ads*",
-    
-    // Padrões de parâmetros de anúncios
-    "*://www.youtube.com/*&ad_type*",
-    "*://www.youtube.com/*&adformat*",
-    "*://www.youtube.com/*&advideo*",
-    "*://www.youtube.com/*&prerolls*",
-    "*://www.youtube.com/*&pyv_ad*",
-    "*://www.youtube.com/*&ad_slots*",
-    "*://www.youtube.com/*&ad_logging*",
-    "*://www.youtube.com/*&adtest*"
-];
+// Otimização das listas de padrões usando Set para busca mais rápida
+const adDomains = new Set([
+    'doubleclick.net',
+    'googlesyndication.com',
+    'google-analytics.com',
+    'googletagservices.com',
+    'googleadservices.com',
+    'googletagmanager.com'
+]);
 
-// Lista de parâmetros de anúncios para verificar
-const adParams = [
-    // Prefixos comuns de parâmetros de anúncios
-    'ad_type',
-    'adformat',
-    'advideo',
-    'ad_slots',
-    'ad_logging',
-    'adtest',
-    'adfmt',
-    'ad_age',
-    'ad_gender',
-    'ad_partner',
-    'ad_settings',
-    'ad_source',
-    'ad_tag',
-    'ad_video_pub_id',
-    'adunit',
-    'adpings',
-    'adview',
-    'ad_template',
-    'ad_flags',
-    'ad_break_type'
-];
+// Otimização dos padrões do YouTube
+const youtubeAdPatterns = new Set([
+    '/pagead/',
+    '/ads/',
+    '/get_midroll_info',
+    '/ptracking',
+    '/api/stats/ads',
+    '/pagead/adview',
+    '/pagead/conversion',
+    '/pagead/interaction',
+    '/_get_ads'
+]);
 
-// Regras para bloquear anúncios
-chrome.webRequest.onBeforeRequest.addListener(
-    function(details) {
-        // Verifica se a URL contém parâmetros de anúncio
-        const url = new URL(details.url);
-        const searchParams = url.searchParams;
+// Cache para URLs já verificadas
+const urlCache = new Map();
+const CACHE_MAX_SIZE = 1000;
+
+// Função para limpar cache periodicamente
+function clearCache() {
+    if (urlCache.size > CACHE_MAX_SIZE) {
+        const entries = Array.from(urlCache.entries());
+        const halfSize = Math.floor(CACHE_MAX_SIZE / 2);
+        entries.slice(0, halfSize).forEach(([key]) => urlCache.delete(key));
+    }
+}
+
+// Otimização da verificação de URLs
+function shouldBlockRequest(url) {
+    // Verifica cache primeiro
+    if (urlCache.has(url)) {
+        return urlCache.get(url);
+    }
+
+    try {
+        const urlObj = new URL(url);
         
         // Ignora URLs de vídeo normais do YouTube
-        if (url.href.includes('googlevideo.com/videoplayback') && !url.href.includes('&adformat=')) {
-            return {cancel: false};
+        if (urlObj.href.includes('googlevideo.com/videoplayback') && !urlObj.href.includes('&adformat=')) {
+            urlCache.set(url, false);
+            return false;
         }
-        
-        // Verifica se algum parâmetro de anúncio está presente
-        const hasAdParams = adParams.some(param => 
-            searchParams.has(param) || 
-            url.href.includes(`&${param}=`)
-        );
-        
-        // Verifica se é uma requisição de anúncio do YouTube
-        const isYouTubeAd = url.href.includes('/youtubei/v1/player/ad_break') ||
-                           url.href.includes('/api/stats/ads') ||
-                           url.href.includes('/pagead/');
-        
-        // Verifica se a URL corresponde a algum padrão de anúncio
-        const matchesPattern = adPatterns.some(pattern => 
-            new RegExp('^' + pattern.replace(/\*/g, '.*') + '$').test(details.url)
-        );
 
-        return {cancel: hasAdParams || matchesPattern || isYouTubeAd};
+        // Verifica domínios de anúncios
+        const domain = urlObj.hostname.replace('www.', '');
+        if (Array.from(adDomains).some(adDomain => domain.includes(adDomain))) {
+            urlCache.set(url, true);
+            return true;
+        }
+
+        // Verifica padrões do YouTube
+        if (domain.includes('youtube.com')) {
+            const shouldBlock = Array.from(youtubeAdPatterns).some(pattern => 
+                urlObj.pathname.includes(pattern)
+            );
+            urlCache.set(url, shouldBlock);
+            return shouldBlock;
+        }
+
+        urlCache.set(url, false);
+        return false;
+    } catch (e) {
+        console.error('Erro ao processar URL:', e);
+        return false;
+    }
+}
+
+// Listener otimizado para requisições
+chrome.webRequest.onBeforeRequest.addListener(
+    function(details) {
+        return { cancel: shouldBlockRequest(details.url) };
     },
     {
-        urls: ["<all_urls>"],
-        types: ["image", "script", "xmlhttprequest", "sub_frame", "main_frame"]
+        urls: [
+            "*://*.youtube.com/*",
+            "*://*.doubleclick.net/*",
+            "*://*.googlesyndication.com/*",
+            "*://*.google-analytics.com/*",
+            "*://*.googletagservices.com/*",
+            "*://*.googleadservices.com/*",
+            "*://*.googletagmanager.com/*"
+        ],
+        types: ["xmlhttprequest", "script", "image", "media"]
     },
     ["blocking"]
 );
 
-// Bloqueia requisições de anúncios em vídeos
+// Otimização do processamento de headers
+const blockedHeaderPrefixes = new Set([
+    'x-client-data',
+    'doubleclick',
+    'ad-',
+    'yt-ad',
+    'adhost',
+    'adformat'
+]);
+
 chrome.webRequest.onBeforeSendHeaders.addListener(
     function(details) {
-        // Ignora URLs de vídeo normais do YouTube
-        const url = new URL(details.url);
-        if (url.href.includes('googlevideo.com/videoplayback') && !url.href.includes('&adformat=')) {
+        const url = details.url;
+        if (url.includes('googlevideo.com/videoplayback') && !url.includes('&adformat=')) {
             return {requestHeaders: details.requestHeaders};
         }
 
-        const headers = details.requestHeaders;
-        const newHeaders = headers.filter(header => {
-            const name = header.name.toLowerCase();
-            const blockList = [
-                'x-client-data',
-                'doubleclick',
-                'ad-',
-                'yt-ad',
-                'adhost',
-                'adformat',
-                'adcontent',
-                'adunit',
-                'adsize',
-                'adtype',
-                'adview',
-                'adreferrer',
-                'adsource',
-                'adbreaktype',
-                'adclient',
-                'adposition',
-                'adplacement',
-                'adnetwork',
-                'adserving',
-                'adexchange',
-                'admanager',
-                'adpolicy',
-                'adrequest',
-                'adresponse',
-                'adsystem',
-                'adtagurl',
-                'adtracking',
-                'advalidation',
-                'adviewability'
-            ];
-            return !blockList.some(term => name.includes(term));
-        });
-        return {requestHeaders: newHeaders};
+        return {
+            requestHeaders: details.requestHeaders.filter(header => {
+                const headerName = header.name.toLowerCase();
+                return !Array.from(blockedHeaderPrefixes).some(prefix => 
+                    headerName.startsWith(prefix)
+                );
+            })
+        };
     },
     {
         urls: ["*://*.youtube.com/*", "*://*.googlevideo.com/*"],
@@ -147,15 +127,23 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
     ["blocking", "requestHeaders"]
 );
 
-// Monitora mudanças no storage
+// Limpa o cache periodicamente (a cada 5 minutos)
+setInterval(clearCache, 5 * 60 * 1000);
+
+// Gerenciamento eficiente do badge
+let badgeUpdateTimeout;
 chrome.storage.onChanged.addListener((changes, namespace) => {
     if (changes.totalAdsBlocked) {
-        const newTotal = changes.totalAdsBlocked.newValue;
-        chrome.action.setBadgeText({
-            text: newTotal > 0 ? newTotal.toString() : ''
-        });
-        chrome.action.setBadgeBackgroundColor({
-            color: '#4CAF50'
-        });
+        // Debounce da atualização do badge
+        clearTimeout(badgeUpdateTimeout);
+        badgeUpdateTimeout = setTimeout(() => {
+            const newTotal = changes.totalAdsBlocked.newValue;
+            chrome.action.setBadgeText({
+                text: newTotal > 0 ? newTotal.toString() : ''
+            });
+            chrome.action.setBadgeBackgroundColor({
+                color: '#4CAF50'
+            });
+        }, 100);
     }
 }); 

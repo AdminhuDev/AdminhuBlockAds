@@ -1,21 +1,23 @@
 {
   "manifest_version": 3,
-  "name": "YouTube Ad Blocker Pro",
-  "version": "2.0", 
-  "description": "Bloqueador de anúncios avançado para YouTube",
+  "name": "Bloqueador de Anúncios do YouTube",
+  "version": "1.0",
+  "description": "Bloqueia anúncios no YouTube e oferece controle de volume avançado",
   "permissions": [
     "webRequest",
     "webRequestBlocking",
     "storage",
-    "scripting",
-    "tabs",
-    "*://*.youtube.com/*",
-    "*://*.googlevideo.com/*",
-    "*://*.doubleclick.net/*"
+    "tabs"
   ],
   "host_permissions": [
     "*://*.youtube.com/*",
-    "*://*.googlevideo.com/*"
+    "*://*.googlevideo.com/*",
+    "*://*.doubleclick.net/*",
+    "*://*.googlesyndication.com/*",
+    "*://*.google-analytics.com/*",
+    "*://*.googletagservices.com/*",
+    "*://*.googleadservices.com/*",
+    "*://*.googletagmanager.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -23,12 +25,11 @@
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*"],
-      "js": ["content.js"],
       "css": ["styles.css"],
-      "run_at": "document_start"
+      "js": ["content.js"]
     }
   ],
   "action": {
-    "default_title": "YouTube Ad Blocker Pro"
+    "default_title": "Bloqueador de Anúncios do YouTube"
   }
 }
