@@ -6,6 +6,7 @@ let audioContext = null;
 let gainNode = null;
 let mediaSource = null;
 let lastUpdate = 0;
+let currentVolume = 100;
 
 // Função para criar elementos
 function createElement(tag, className, innerHTML = '') {
@@ -30,6 +31,22 @@ function initAudioContext(video) {
     }
 }
 
+// Função para salvar volume
+function saveVolume(volume) {
+    chrome.storage.local.set({ 'savedVolume': volume });
+    currentVolume = volume;
+}
+
+// Função para carregar volume
+function loadVolume(callback) {
+    chrome.storage.local.get(['savedVolume'], (result) => {
+        if (result.savedVolume) {
+            currentVolume = result.savedVolume;
+            callback(currentVolume);
+        }
+    });
+}
+
 // Função otimizada para aplicar volume
 function applyVolume(video, volume) {
     if (!video) return;
@@ -50,6 +67,7 @@ function applyVolume(video, volume) {
                 gainNode.gain.value = volume / 100;
             }
         }
+        saveVolume(volume);
     } catch (e) {
         console.error('Erro ao aplicar volume:', e);
     }
@@ -94,25 +112,31 @@ function setupVolumeKnob(volumeControl) {
     if (!knob || !progress || !valueDisplay) return;
 
     let currentRotation = 0;
-    let currentVolume = 100;
 
     // Atualiza a interface do usuário
-    function updateUI() {
+    function updateUI(volume) {
+        currentRotation = (volume * 1.8) - 180;
         progress.style.transform = `rotate(${currentRotation}deg)`;
-        valueDisplay.textContent = `${currentVolume}%`;
+        valueDisplay.textContent = `${volume}%`;
     }
+
+    // Carrega o volume salvo
+    loadVolume((volume) => {
+        updateUI(volume);
+        const video = document.querySelector('video');
+        if (video) applyVolume(video, volume);
+    });
 
     // Configura apenas o evento de rolagem do mouse
     knob.addEventListener('wheel', (e) => {
         e.preventDefault();
         const delta = e.deltaY > 0 ? -5 : 5;
         currentVolume = Math.max(0, Math.min(200, currentVolume + delta));
-        currentRotation = (currentVolume * 1.8) - 180;
         
         const video = document.querySelector('video');
         if (video) applyVolume(video, currentVolume);
         
-        updateUI();
+        updateUI(currentVolume);
     });
 
     volumeKnobElement = knob;
@@ -188,6 +212,13 @@ const observer = new MutationObserver(throttle(() => {
     if (!document.querySelector('#ad-counter')) {
         insertCounter();
     }
+    
+    // Aplica volume ao novo vídeo
+    const video = document.querySelector('video');
+    if (video && currentVolume !== 100) {
+        applyVolume(video, currentVolume);
+    }
+    
     removeAds();
 }, 1000));
 
